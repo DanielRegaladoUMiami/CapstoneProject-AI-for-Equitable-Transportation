@@ -6,10 +6,10 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 
-**Capstone Project** — University of Miami × Deloitte
+**Capstone Project** — University of Miami × Deloitte AI Academy  
 **Duration:** January 16 – May 1, 2026
 
-📋 [Project Tracking Board (Notion)](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b)
+📋 [Project Board (GitHub)](https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation/projects) · [Dashboard (Notion)](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b) · [Wiki](https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation/wiki)
 
 ---
 
@@ -58,14 +58,14 @@ This project aims to design an AI-driven decision support system that identifies
 | Visualization | Plotly, Folium/Mapbox, Matplotlib, Seaborn |
 | Dashboard | Streamlit or Power BI |
 | Simulation | Graph-based scenario engine (Python) |
-| Project Tracking | [Notion](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b) |
+| Project Tracking | [GitHub Projects](https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation/projects) · [Notion](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b) |
 | Version Control | Git / GitHub |
 
 ## 🚀 Getting Started
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/CapstoneProject-AI-for-Equitable-Transportation.git
+git clone https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation.git
 cd CapstoneProject-AI-for-Equitable-Transportation
 
 # Create virtual environment
@@ -132,11 +132,44 @@ Model the transit system as a graph (stops = nodes, routes = edges). Compute net
 ### Dashboard
 Four core views: access gap map with demographic overlay, scenario comparison (baseline vs. proposed changes), equity indicator charts, and network connectivity visualization.
 
+## 📋 Project Tracking — How We Work
+
+We use **GitHub Issues + Project Board** to track all tasks, milestones, and deliverables.
+
+### Workflow
+
+1. **Pick a task** — Go to the [Project Board](https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation/projects), find an issue in `Todo`
+2. **Assign yourself** — Click the issue → assign yourself
+3. **Move to In Progress** — Drag the card to `In Progress`
+4. **Create a branch** — `git checkout -b feature/issue-number-short-description`
+5. **Do the work** — Commit often with meaningful messages
+6. **Open a PR** — Reference the issue: `Closes #12`
+7. **Move to Done** — After merge, the card moves to `Done` automatically
+
+### Labels
+
+| Label Type | Examples | Purpose |
+|---|---|---|
+| **Sprint** | `sprint 1: eda`, `sprint 2: modeling` | Filter tasks by sprint |
+| **Sub-Sprint** | `1a: data acquisition`, `2b: baseline modeling` | Filter by sub-sprint phase |
+| **Priority** | `priority: high`, `priority: medium`, `priority: low` | Task urgency |
+| **Type** | `type: task`, `type: milestone`, `type: deliverable`, `type: decision gate` | Task category |
+
+### Milestones
+
+| Milestone | Due Date |
+|---|---|
+| Sprint 1: EDA | Feb 20, 2026 |
+| Sprint 2: Modeling | Mar 27, 2026 |
+| Sprint 3: Solution Build | Apr 17, 2026 |
+| Sprint 4: Dry-Run | Apr 24, 2026 |
+| Sprint 5: Final | May 1, 2026 |
+
 ## 👥 Team
 
 | Name | Role |
 |---|---|
-| Daniel Regalado | Team Member |
+| Daniel Regalado | Team Lead |
 | Luna Gerlic | Team Member |
 | Jeanne Hassoun | Team Member |
 | Lina Graf | Team Member |
@@ -152,4 +185,4 @@ Four core views: access gap map with demographic overlay, scenario comparison (b
 
 ---
 
-*University of Miami — MS in Business Analytics — Deloitte Capstone 2026*
+*University of Miami — MS in Business Analytics — Deloitte AI Academy Capstone 2026*
