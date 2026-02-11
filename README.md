@@ -1,53 +1,65 @@
 # 🚍 AI for Equitable Public Transportation
 
-> Predicting transit access gaps and equity issues across Miami's diverse communities using AI-driven demand forecasting and simulation.
+> Predicting transit access gaps and equity issues across Miami-Dade County using AI-driven demand forecasting, graph network modeling, scenario simulation, and interactive visualization.
 
-[![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)]()
+[![Status](https://img.shields.io/badge/Status-Sprint%201-yellow)]()
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 
+**Capstone Project** — University of Miami × Deloitte AI Academy  
+**Duration:** January 16 – May 1, 2026
+
+📋 [Project Tracking Board (Notion)](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b)
+
+---
+
 ## 📋 Problem Statement
 
-A Miami-based transit authority needs a model that predicts public transportation access gaps and emerging equity issues across their service area. The region features diverse demographics and a mix of densely populated urban centers and underserved outlying communities. Residents need up-to-date insights about their access to reliable, affordable, and efficient transit options — especially as neighborhoods change, new developments arise, or service changes occur.
+Urban public transportation systems face persistent equity challenges: uneven service coverage, long wait times in underserved areas, and limited visibility into how demographic changes impact access. These challenges are especially relevant in Miami-Dade County, where population density, income distribution, and transit dependency vary significantly across neighborhoods.
+
+This project aims to design an AI-driven decision support system that identifies transit accessibility gaps, predicts emerging inequities, and evaluates the impact of potential service changes through graph-based network modeling and what-if simulations.
 
 **Industry Focus:** Demand Forecasting · Universal Service Design · Accessibility
 
 ## 🎯 Project Goals
 
-### Level 1 — Data Analysis & Predictive Modeling
-- Clean and analyze demographic/socioeconomic data, transit usage/operations data, and community feedback
-- Build regression and time series models to predict future transit demand and identify where service gaps and inequities are likely to occur
+1. **Identify** current and future public transportation access gaps
+2. **Predict** changes in transit demand and equity outcomes using interpretable models
+3. **Model** the transit system as a graph network to capture connectivity and reachability patterns
+4. **Simulate** service change scenarios using graph-based methods (frequency adjustments, route modifications, new stops)
+5. **Visualize** insights through an interactive dashboard with network-aware views
+6. **Support** data-driven, equity-focused transit planning decisions
 
-### Level 2 — Simulation
-- Design an AI model that simulates the impact of proposed service changes (e.g., wait times, equity outcomes)
+## 📦 Deliverables
 
-### Level 3 — Dashboard
-- Build an interactive dashboard to visualize local transit access, ridership analytics, alerts, and recommendations
-
-## 📦 Expected Deliverables
-
-| Deliverable | Description |
-|---|---|
-| **Exploratory Data Analysis** | Statistical profiling and visualization of transit and demographic data |
-| **Prediction Model** | Regression & time series models for demand forecasting and gap identification |
-| **Simulation Model** | Impact simulation for proposed service changes |
-| **Interactive Dashboard** | Visual interface for transit access, ridership, and equity insights |
+| Sprint | Focus | Deliverables |
+|---|---|---|
+| **Sprint 1** | Exploratory Data Analysis | Cleaned integrated dataset, data dictionary, EDA report with hypotheses |
+| **Sprint 2** | Model Design & Analysis | Baseline regression & time series models, ranked geographic zones for intervention |
+| **Sprint 3** | Graph Network + Simulation + Dashboard | Graph-based transit network model, GNN-powered simulation results, interactive Streamlit dashboard |
+| **Sprint 4** | Dry-Run | Final presentation deck, polished visuals |
+| **Sprint 5** | Final Presentation | Live demo, policy recommendations, complete documentation |
 
 ## 📊 Data Sources
 
 | Dataset | Source | Description |
 |---|---|---|
-| **Demographic Data** | [US Census Bureau (ACS 2023)](https://data.census.gov/table/ACSDP1Y2023.DP03?q=DP03&g=040XX00US12) | Socioeconomic and demographic profiles for Florida |
-| **Transit System Data** | [General Transit Feed Specification (GTFS)](https://gtfs.org/) | Schedule and real-time transit data |
-| **Accessibility Data** | [National Accessibility Evaluation](https://www.arcgis.com/home/item.html?id=40526f1e2c734241bab4d3bb41385c51) | Transit accessibility metrics |
+| Demographic Data | [US Census Bureau (ACS 2023)](https://data.census.gov/table/ACSDP1Y2023.DP03?q=DP03&g=040XX00US12) | Socioeconomic and demographic profiles for Florida |
+| Transit System Data | [GTFS](https://gtfs.org/) | Schedule and real-time transit feeds |
+| Accessibility Data | [National Accessibility Evaluation](https://www.arcgis.com/home/item.html?id=40526f1e2c734241bab4d3bb41385c51) | Transit accessibility metrics via ArcGIS |
 
 ## 🛠️ Tech Stack
 
-- **Languages:** Python
-- **Analysis:** Pandas, NumPy, Scikit-learn, Statsmodels
-- **Visualization:** Plotly, Matplotlib, Seaborn
-- **Dashboard:** Streamlit / Dash *(TBD)*
-- **Data:** GTFS, Census API, ArcGIS
+| Category | Tools |
+|---|---|
+| Data Processing | Python (Pandas, NumPy, GeoPandas) |
+| Modeling | Scikit-learn, Statsmodels, Interpretable ML |
+| Graph Modeling | NetworkX, PyTorch Geometric (GNNs) |
+| Visualization | Plotly, Folium/Mapbox, Matplotlib, Seaborn |
+| Dashboard | Streamlit or Power BI |
+| Simulation | Graph-based scenario engine (Python) |
+| Project Tracking | [Notion](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b) |
+| Version Control | Git / GitHub |
 
 ## 🚀 Getting Started
 
@@ -67,19 +79,77 @@ pip install -r requirements.txt
 ## 📁 Project Structure
 
 ```
-├── data/               # Raw and processed datasets
-├── notebooks/          # Jupyter notebooks for EDA and modeling
-├── src/                # Source code for models and pipeline
-├── dashboard/          # Dashboard application
-├── reports/            # Generated analysis reports
-├── requirements.txt    # Python dependencies
+├── data/
+│   ├── raw/                  # Original datasets (Census, GTFS, Accessibility)
+│   │   ├── census/
+│   │   ├── gtfs/
+│   │   └── accessibility/
+│   ├── interim/              # Intermediate transformations
+│   └── processed/            # Final cleaned & merged datasets
+├── sprint_1_eda/             # Data profiling, cleaning, integration, exploratory analysis
+├── sprint_2_modeling/        # Feature engineering, regression, time series, validation
+├── sprint_3_simulation/      # Graph network modeling, GNN simulation, Streamlit dashboard
+├── sprint_4_dryrun/          # Refined deck, polished visuals, rehearsal feedback
+├── sprint_5_final/           # Final presentation, live demo, executive recommendations
+├── docs/                     # Data dictionary, methodology documentation
+├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 
+## 📅 Sprint Timeline
+
+```
+Sprint 1 ▸ EDA                          Jan 16 – Feb 20  ██████████░░░░░░░░░░
+  1a · Data Acquisition & Evaluation     Jan 16 – Jan 30  ★ Decision Gate
+  1b · Data Cleaning & Integration       Jan 31 – Feb 13  ★ Deliverable
+  1c · Exploratory Analysis & Insights   Feb 14 – Feb 20  ★ Sprint Review
+
+Sprint 2 ▸ Model Design & Analysis      Feb 21 – Mar 27  ░░░░░░░░░░██████████
+  2a · Feature Engineering               Feb 21 – Mar 6   ★ Deliverable
+  2b · Baseline Modeling                 Mar 7  – Mar 20
+  2c · Validation & Documentation        Mar 21 – Mar 27  ★ Sprint Review
+
+Sprint 3 ▸ Graph Network + Dashboard    Mar 28 – Apr 17  ░░░░░░░░░░░░░░██████
+  3a · Graph Modeling & Simulation       Mar 28 – Apr 7   ★ Deliverable
+  3b · Dashboard Development             Apr 8  – Apr 17  ★ Sprint Review
+
+Sprint 4 ▸ Dry-Run                      Apr 18 – Apr 24  ░░░░░░░░░░░░░░░░░░██
+Sprint 5 ▸ Final Presentation           May 1             ░░░░░░░░░░░░░░░░░░░█
+```
+
+## 🔬 Methodology Overview
+
+### Sprint 1 — EDA
+Data profiling, quality assessment, geographic join strategy, and exploratory visualizations to understand transit coverage vs. population density and identify access disparities.
+
+### Sprint 2 — Predictive Modeling
+Regression and time series models to estimate transit demand, predict accessibility outcomes, and rank geographic zones for intervention. Focus on interpretability — feature importance and coefficient analysis to identify top drivers of inequity.
+
+### Sprint 3 — Graph Network Modeling & Simulation
+Model the transit system as a graph (stops = nodes, routes = edges). Compute network accessibility metrics (reachability, centrality, travel-time paths). Apply Graph Neural Networks (GNNs) to capture non-linear patterns in accessibility propagation. Simulate service changes on the graph and quantify impact vs. baseline.
+
+### Dashboard
+Four core views: access gap map with demographic overlay, scenario comparison (baseline vs. proposed changes), equity indicator charts, and network connectivity visualization.
+
 ## 👥 Team
 
-- **Gabby Ridge** — Project Lead & Content Creator
+| Name | Role |
+|---|---|
+| Daniel Regalado | Team Member |
+| Luna Gerlic | Team Member |
+| Jeanne Hassoun | Team Member |
+| Lina Graf | Team Member |
+| Amelia Simpson | Team Member |
+
+## 📝 Guiding Principles
+
+- **Don't overcommit** — deliver what we promise, promise what we can deliver
+- **AI ≠ just LLMs** — leverage regression, time series, clustering, spatial analysis, and graph neural networks
+- **MVP first** — a working, interpretable pipeline beats an ambitious but unfinished system
+- **Let data guide decisions** — evaluate early, pivot if needed
+- **Stay curious** — ask questions and clarify assumptions continuously
 
 ---
 
-*Capstone Project — University of Miami, MS in Business Analytics*
+*University of Miami — MS in Business Analytics — Deloitte Capstone 2026*
