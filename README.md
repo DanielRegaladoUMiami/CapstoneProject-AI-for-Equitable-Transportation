@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 
-**Capstone Project** — University of Miami × Deloitte AI Academy  
+**Capstone Project** — University of Miami × Deloitte
 **Duration:** January 16 – May 1, 2026
 
 📋 [Project Tracking Board (Notion)](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b)
