@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 
-**Capstone Project** — University of Miami × Deloitte AI Academy  
+**Capstone Project** — University of Miami × Deloitte
 **Duration:** January 16 – May 1, 2026
 
 📋 [Project Board (GitHub)](https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation/projects) · [Dashboard (Notion)](https://www.notion.so/AI-for-Equitable-Transportation-Project-Dashboard-2ff03869ae4281d4b095df18a18ef77b) · [Wiki](https://github.com/DanielRegaladoUMiami/CapstoneProject-AI-for-Equitable-Transportation/wiki)
@@ -185,4 +185,4 @@ We use **GitHub Issues + Project Board** to track all tasks, milestones, and del
 
 ---
 
-*University of Miami — MS in Business Analytics — Deloitte AI Academy Capstone 2026*
+*University of Miami — MS in Business Analytics — Deloitte Capstone 2026*
