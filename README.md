@@ -2,7 +2,7 @@
 
 > Predicting transit access gaps and equity issues across Miami-Dade County using AI-driven demand forecasting, graph network modeling, scenario simulation, and interactive visualization.
 
-[![Status](https://img.shields.io/badge/Status-Sprint%201-yellow)]()
+[![Status](https://img.shields.io/badge/Status-Sprint%201-orange)]()
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 
