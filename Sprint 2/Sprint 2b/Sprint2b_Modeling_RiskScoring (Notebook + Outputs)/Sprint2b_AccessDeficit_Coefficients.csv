@@ -1,0 +1,20 @@
+feature,category,ridge_coef,lasso_coef,lasso_selected
+transit_jobs_30_mean,Accessibility,-0.06751676632113246,-0.0716073625692424,True
+headway_peak_am_min,GTFS Service,0.018464443712121966,0.015251470671474303,True
+trend_commute_wfh_pct,Commute Trend,-0.01783760510677143,-0.01571271980249443,True
+n_neighbors,Spatial,0.01751223880487607,0.01638241797660344,True
+auto_jobs_30_mean,Accessibility,-0.014199201173824878,-0.012691863695610952,True
+stop_count,GTFS Service,-0.013206528725609545,-0.015003296909198207,True
+route_count,GTFS Service,-0.011940320391691187,-0.007033803243338205,True
+weekend_weekday_ratio,GTFS Service,-0.011214405449943683,-0.008870913653662701,True
+freq_early_tph,GTFS Service,0.008930432631109693,0.00405259325573043,True
+neighbor_mean_equity_score,Spatial,0.007306239330443483,0.006119283031777462,True
+trend_commute_drove_alone_pct,Commute Trend,-0.00694170020603335,-0.004139181388873072,True
+freq_peak_am_tph,GTFS Service,-0.006686158823813264,-0.0,False
+unique_routes,GTFS Service,0.005616170000706893,0.0,False
+neighbor_mean_headway_peak,Spatial,0.005350540272955761,0.004551522767925698,True
+rail_trip_share,GTFS Service,0.004669072078949344,0.003428060330271434,True
+headway_early_min,GTFS Service,-0.002905076676299613,-0.0,False
+unique_stops,GTFS Service,-0.0013873898228733087,-0.0,False
+trend_mean_commute_time_min,Commute Trend,-0.0013379216000842184,-0.00020942865166983967,True
+trend_commute_public_transit_pct,Commute Trend,-0.0002731690228502535,0.0,False
