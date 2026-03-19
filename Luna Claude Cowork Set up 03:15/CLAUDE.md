@@ -23,6 +23,11 @@ Design an AI system to predict transit access gaps and emerging equity issues. D
 | `Sprint 1 EDAs/transit_data.xlsx` | GTFS: 128 routes, 6,530 stops, 943K stop-times, 24,529 trips |
 | `MiamiDadeMpoAllAccessGpkg-expanded/` | GeoPackage: 36,507 blocks, auto/transit/bike accessibility |
 | `Sprint 2/tab20_tract20_tract10_st12.txt` | Census 2010→2020 tract crosswalk (Florida) |
+| `Sprint2b_Feature_Engineering.ipynb` | 2b.1–2b.3: GTFS features, ACS trend slopes, feature consolidation → outputs `Sprint2b_Modeling_Features_NotebookOutput.csv` |
+| `Sprint 2 /ACS Tract Level Data/ACS_MiamiDade_Tracts_2024.csv` | Patched 2024 ACS 5-Year, tract-level (corrected DP codes for hispanic, black, asian, foreign_born) |
+| `Sprint 2 /Sprint2b_ACS_TimeSeries.ipynb` | 2b.2 + 2b.6: 6-year ACS panel (2019-2024), per-tract trend slopes, 2027 risk projection, fragile tract flagging |
+| `Sprint 2 /Sprint2b_Modeling_Features_NotebookOutput.csv` | Modeling-ready dataset: 504 tracts × 61 cols, all features (GTFS + ACS trends + spatial + interactions) + equity target |
+| `Sprint 2 /Sprint2b_Modeling_RiskScoring.ipynb` | 2b.4–2b.7: Access Deficit models (regression + XGBoost), risk scoring, GTFS sensitivity |
 | `tasks/todo.md` | Detailed sub-sprint specs, results, observations |
 | `tasks/lessons.md` | Mistake patterns and rules to prevent recurrence |
 
@@ -37,26 +42,28 @@ Key decisions: tract-level (not block), multiplicative composite (Need × Access
 
 ## Sprint 2b — Predictive Modeling [CURRENT]
 
-- [ ] 2b.1 — GTFS feature engineering (headways, service span, frequency by time band, weekend gap, route diversity)
-- [ ] 2b.2 — Multi-year ACS pull (2019-2023 vintages from Census API, compute temporal trend slopes)
-- [ ] 2b.3 — Feature consolidation (demographics + trends + GTFS metrics + spatial + interactions)
-- [ ] 2b.4 — Regression model (interpretable drivers of equity scores, coefficient table)
-- [ ] 2b.5 — ML model (XGBoost/LightGBM, accepts service params as features for simulation)
-- [ ] 2b.6 — Risk scoring (flag tracts trending toward Critical, identify fragile tracts)
-- [ ] 2b.7 — Validation and reporting (cross-val, residuals, feature importance, model comparison)
+Key decision: Original single-model approach (predict equity_priority_score from all features) was circular — target is a formula built from the predictor features. Revised to two-model split: Need side (TimeSeries notebook `Sprint2b_ACS_TimeSeries.ipynb`, demographic projections) × Access Deficit side (Modeling notebook `Sprint2b_Modeling_RiskScoring.ipynb`, transit features → composite_access_deficit). See tasks/todo.md for full rationale.
+
+- [x] 2b.1 — GTFS feature engineering (headways, service span, frequency by time band, weekend gap, route diversity)
+- [x] 2b.2 — Multi-year ACS pull (2019-2024 vintages from Census API, 6-year panel, compute temporal trend slopes)
+- [x] 2b.3 — Feature consolidation (demographics + trends + GTFS metrics + spatial + interactions)
+- [ ] 2b.4 — Access Deficit regression model (target = composite_access_deficit, transit/spatial features only, coefficient table)
+- [ ] 2b.5 — Access Deficit ML model (XGBoost, same target/features, Sprint 3 simulation engine)
+- [ ] 2b.6 — Risk scoring (projected_need from TimeSeries × predicted_access_deficit, flag fragile tracts)
+- [ ] 2b.7 — Validation and reporting (cross-val, residuals, GTFS sensitivity analysis, model comparison)
 
 ## Sprint 3 — Simulation Engine [PENDING]
 
-- [ ] 3.1 — Define simulation parameters (map user levers to ML input features)
-- [ ] 3.2 — Build simulator (change features → ML re-predicts → before/after comparison)
-- [ ] 3.3 — Scenario validation (3-5 reference scenarios, sanity-check)
+- [ ] 3.1 — Define simulation parameters (map user levers to both models: GTFS params → Access Deficit, demographic scenarios → Need)
+- [ ] 3.2 — Build simulator (two-model pipeline: modify either side → recombine projected_need × predicted_access_deficit → new equity score)
+- [ ] 3.3 — Scenario validation (3-5 reference scenarios testing both sides, sanity-check)
 
 ## Sprint 4 — Interactive Dashboard [PENDING]
 
-- [ ] 4.1 — Dashboard design (map + controls + drill-down + before/after)
+- [ ] 4.1 — Dashboard design (map + controls for both need/access sides + decomposition view + before/after)
 - [ ] 4.2 — Build core dashboard (Plotly Dash or Streamlit)
-- [ ] 4.3 — Integrate simulation (user adjusts params → real-time equity update)
-- [ ] 4.4 — Alerts and recommendations (at-risk tracts, feature importance insights, export)
+- [ ] 4.3 — Integrate simulation (user adjusts GTFS params and/or demographic scenarios → both models update → equity score responds)
+- [ ] 4.4 — Alerts and recommendations (fragile tracts from both models, trend projections, export)
 
 ## Deliverable Mapping
 
@@ -66,6 +73,15 @@ Key decisions: tract-level (not block), multiplicative composite (Need × Access
 | Prediction Model Results | 2b | CURRENT |
 | Simulation Model Results | 3 | PENDING |
 | Interactive Dashboard | 4 | PENDING |
+
+---
+
+# Environment
+
+- **Primary IDE**: VS Code (local). Used for most coding tasks.
+- **Colab**: Used only for GPU-dependent workloads (model training) or one-off throwaway tasks (small data pulls like ACS fetches) to avoid polluting the local file system.
+- **Python**: 3.9.6
+- When writing code or instructions, assume VS Code / local execution unless the task specifically requires GPU or is a disposable one-off.
 
 ---
 
@@ -108,8 +124,8 @@ Key decisions: tract-level (not block), multiplicative composite (Need × Access
 ## Notebook Standards (.ipynb)
 1. Changelog as first cell (version history: what, when, why)
 2. Numbered section headers (## 1. Data Loading, ## 2. Feature Engineering, etc.)
-3. Markdown before every code cell (plain-language: what, why, expected result — readable by non-technical audience)
-4. Markdown after key outputs (interpret findings for the project)
+3. Markdown before every code cell explaining reasoning, not just description. State what you're doing, why, and what you expect — but also connect it to prior outputs (example:"From the correlation matrix we saw X, so now we do Y"). This requires building the notebook cell-by-cell with live outputs guiding each next step, not writing a generic template end-to-end.
+4. Markdown after key outputs interpreting findings for the project AND explaining what they imply for the next step. Think like a senior data scientist reasoning through a problem — assess mid-process outputs, flag surprises, adjust course. The notebook should read as an analytical narrative, not a sequence of disconnected steps.
 5. Mature, simple code. Comments only where not self-explanatory.
 6. No dead code, no debugging artifacts.
 

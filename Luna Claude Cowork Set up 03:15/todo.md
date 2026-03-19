@@ -43,10 +43,11 @@ Compute granular transit service metrics from 943K stop-time records:
 These serve dual purpose: predictive features for ML AND adjustable parameters for Sprint 3 simulation.
 
 ## 2b.2 — Multi-Year ACS Data Pull
-Pull 2019-2023 ACS 5-Year vintages from Census API (same variables as current ACS):
+Pull 2019-2024 ACS 5-Year vintages from Census API (same variables as current ACS):
 - poverty_rate, no_vehicle, snap_benefits, rent_burden, unemployment, commute_transit, etc.
-- Compute per-tract temporal trend slopes (linear regression of each variable over 5 years)
+- Compute per-tract temporal trend slopes (linear regression of each variable over 6 years)
 - Output: trend_poverty_slope, trend_rent_burden_slope, trend_no_vehicle_slope, etc.
+- Note: ACS 2024 5-Year estimates were pulled specifically for this sprint; 6-year panel (2019-2024)
 
 ## 2b.3 — Feature Consolidation
 Combine into one modeling dataset:
@@ -56,70 +57,157 @@ Combine into one modeling dataset:
 - Spatial features (neighboring tract mean scores, distance to nearest high-service tract)
 - Interaction terms (poverty × transit_desert, headway × no_vehicle_rate, rent_burden_slope × low_service)
 
-## 2b.4 — Regression Model (Interpretable)
-- Dependent variable: equity_priority_score (or composite components separately)
-- Linear regression + regularized (Lasso/Ridge) for feature selection
-- Output: coefficient table (which factors drive inequity, by how much)
-- Purpose: explainability layer for Deloitte stakeholders — goes in presentations
+## 2b.4 — Access Deficit Regression Model (REVISED)
 
-## 2b.5 — ML Model (Predictive Engine)
-- XGBoost or LightGBM on same feature set
-- Must accept GTFS service features (headway, frequency, span, stop_count) as inputs
-- This is critical: simulation in Sprint 3 works by modifying these service inputs and re-predicting
-- Hyperparameter tuning via cross-validation
-- Compare performance to regression (R², RMSE, MAE)
+**Approach change:** Original plan predicted equity_priority_score from all features. This was circular — the
+target is a formula we built from the predictor features, so the model just recovered our own weight
+assignments. Revised to predict composite_access_deficit (the transit infrastructure side only) from
+transit/spatial features. This is non-circular: the model discovers which service parameters most drive
+access gaps. Demographics enter only at the combination step via the TimeSeries notebook's need projections.
 
-## 2b.6 — Risk Scoring and Time Series Findings
-- Flag tracts where temporal trends are worsening (poverty rising, vehicle access declining)
-- Identify "fragile" tracts: currently Moderate but trending toward Critical
-- Use ML model to predict what score would be if trends continue 2-3 years
-- Document findings with tract-level detail
+- Target: composite_access_deficit (already in Sprint2b_Modeling_Features_NotebookOutput.csv)
+- Predictor features (transit/infrastructure only):
+  - GTFS service: headway_early_min, headway_peak_am_min, freq_early_tph, freq_peak_am_tph,
+    weekend_weekday_ratio, unique_routes, unique_stops, rail_trip_share, stop_count, route_count
+  - Accessibility: transit_jobs_30_mean, auto_jobs_30_mean
+  - Spatial: neighbor_mean_equity_score, neighbor_mean_headway_peak, n_neighbors
+  - Transit-relevant trends: trend_commute_public_transit_pct, trend_commute_drove_alone_pct,
+    trend_commute_wfh_pct, trend_mean_commute_time_min
+- Excluded (define Need, not Access): poverty, no_vehicle, SNAP, rent burden, unemployment,
+  demographic trends, demographic interaction terms
+- Approach: OLS baseline → Lasso/Ridge/ElasticNet → coefficient table
+- Reference files: Sprint2b_Modeling_Features_NotebookOutput.csv
 
-## 2b.7 — Validation and Reporting
-- k-fold cross-validation for both models
-- Residual analysis (are errors systematic? geographic patterns?)
-- Feature importance plots (SHAP for ML, coefficients for regression)
-- Model comparison table (regression vs ML on same metrics)
-- Notebook + summary report
+## 2b.5 — Access Deficit ML Model (REVISED)
+- Same target and features as 2b.4, XGBoost
+- This is the Sprint 3 simulation engine: modify GTFS inputs → re-predict access deficit
+- Feature importance (permutation/SHAP) tells planners which service levers matter most
+- Key validation: GTFS sensitivity test — lower headway by 5 min, add routes, etc. and verify
+  the model produces plausible, non-trivial access deficit changes
+- Reference files: same as 2b.4
+
+## 2b.6 — Risk Scoring (REVISED)
+- In same modeling notebook, load TimeSeries output and combine both halves:
+  - Projected Need ← TimeSeries notebook (Sprint2b_ACS_TimeSeries.ipynb output)
+  - Predicted Access Deficit ← Access Deficit model from 2b.5
+  - Projected Equity Score = projected_need × predicted_access_deficit
+- Flag fragile tracts: Moderate/High tracts where either side is worsening
+- Note: depends on TimeSeries notebook being finalized
+- Reference files: TimeSeries notebook outputs, Access Deficit model from 2b.5,
+  Sprint2_Equity_Indicators_v3_tract.csv (current tier assignments)
+
+## 2b.7 — Validation and Reporting (REVISED)
+- Cross-validation for Access Deficit models
+- Residual analysis: are certain tract types systematically mispredicted?
+- Feature importance plots for the access deficit model
+- GTFS sensitivity analysis: simulate small service changes, verify plausible access deficit responses
+- Model comparison table (regression vs XGBoost)
+- Document the circularity issue and two-model split rationale (for Deloitte deliverable)
+- Reference files: all model outputs from 2b.4–2b.6
 
 ---
 
 # Sprint 3: Simulation Engine — PENDING
 
-## 3.1 — Define Simulation Parameters
-Map user-adjustable levers to ML model input features:
-- Headway changes → modify avg_headway_peak, avg_headway_evening, etc.
-- Service span extension → modify service_span_hours
-- Stop additions/removals → modify stop_count per tract
-- Route additions → modify route_count, route_diversity
+## 3.1 — Define Simulation Parameters (REVISED)
+Two sets of user-adjustable levers matching the two-model architecture:
+
+Access Deficit side (feeds Access Deficit ML model from 2b.5):
+- Headway changes → modify headway_early_min, headway_peak_am_min
+- Frequency changes → modify freq_early_tph, freq_peak_am_tph
+- Stop additions/removals → modify stop_count, unique_stops per tract
+- Route additions → modify route_count, unique_routes
 - Weekend service parity → modify weekend_weekday_ratio
-Each lever modifies specific GTFS-derived features from 2b.1.
+- Rail expansion → modify rail_trip_share
 
-## 3.2 — Build the Simulator
-Input: proposed service change (which tracts, which parameters, by how much)
-Process: modify relevant features in modeling dataset → run ML model → re-predict equity scores
-Output: before/after comparison (score deltas, tier shifts, number of tracts improved, affected population)
+Need side (feeds through TimeSeries need projections):
+- Demographic scenario changes → "what if poverty rises/falls X% in tract Y?"
+- Economic shifts → "what if median income changes by $Z?"
+- Population changes → "what if tract gains/loses N residents?"
+These modify the projected need component from the TimeSeries notebook.
 
-## 3.3 — Scenario Validation
-Run 3-5 reference scenarios:
-- "Double evening frequency in all Critical tracts"
-- "Extend service span to midnight in top-20 priority tracts"
-- "Add 5 stops to each transit desert tract"
+Note: transit_jobs_30_mean (job accessibility) is NOT directly adjustable — it's a downstream
+outcome of service changes. If 2b.5 shows it's a dominant predictor, consider building a
+sub-model mapping GTFS changes → transit_jobs changes (scope TBD based on 2b.7 sensitivity results).
+
+## 3.2 — Build the Simulator (REVISED)
+Two-model prediction pipeline:
+1. Access Deficit side: modify GTFS features in target tracts → Access Deficit model re-predicts composite_access_deficit
+2. Need side: apply demographic scenario changes → recompute composite_need from TimeSeries projections
+3. Combine: new_equity_score = updated_need × updated_access_deficit
+
+Input: proposed changes on either or both sides (which tracts, which parameters, by how much)
+Output: before/after comparison showing:
+  - Access deficit change per tract (if GTFS params modified)
+  - Need change per tract (if demographic scenario applied)
+  - Equity score change per tract (the combined effect)
+  - Tier shifts (how many tracts change tier)
+  - Affected population
+
+Use cases:
+- Transit planning: "add a route here" → access deficit drops → equity improves
+- Trend projection: "poverty rises 2% over 3 years" → need increases → equity worsens
+- Combined: "add a route AND poverty rises" → see net effect on equity
+
+## 3.3 — Scenario Validation (REVISED)
+Run 3-5 reference scenarios testing BOTH sides:
+
+Access-side scenarios:
+- "Halve peak headway in all Critical tracts"
+- "Add 5 bus stops to each transit desert tract"
 - "Achieve weekend service parity county-wide"
-Verify outputs behave sensibly. Document.
+
+Need-side scenarios:
+- "Poverty rises 3% in all currently-Moderate tracts" (stress test)
+- "Income drops $5K in fragile tracts identified in 2b.6"
+
+Combined scenario:
+- "Add a new route to top-5 underserved tracts while poverty rises 2%"
+
+For each scenario, verify:
+  - Access deficit and need changes are plausible (direction and magnitude)
+  - Equity score changes reflect the multiplication correctly
+  - Tier shifts are sensible
+Document results with tract-level detail.
+Reference files: Access Deficit model from 2b.5, TimeSeries need projections,
+Sprint2_Equity_Indicators_v3_tract.csv (current tiers)
 
 ---
 
 # Sprint 4: Interactive Dashboard — PENDING
 
-## 4.1 — Dashboard Design
-Layout: choropleth map (equity scores by tract), tier summary panel, tract detail drill-down, simulation control panel (sliders/dropdowns), before/after comparison view, trend alerts for at-risk tracts.
+## 4.1 — Dashboard Design (REVISED)
+Layout reflecting the two-model architecture:
+- Choropleth map: equity scores by tract, toggle between need/access deficit/composite views
+- Tier summary panel with count and population per tier
+- Tract detail drill-down: show need score, access deficit score, and which side drives the equity score
+- Simulation control panel with TWO sections:
+  - Transit levers: GTFS parameter sliders (headway, frequency, stops, routes, weekend parity)
+  - Demographic scenarios: sliders or dropdowns for poverty change, income change, population shift
+- Before/after comparison view: side-by-side maps showing access deficit, need, and equity changes
+- Trend alerts panel: fragile tracts from risk scoring (2b.6), projected need changes from TimeSeries
 
-## 4.2 — Build Core Dashboard
-Plotly Dash or Streamlit. Map view with tract coloring by tier/score, filter by neighborhood/tier/indicator, click-to-inspect tract profiles.
+## 4.2 — Build Core Dashboard (REVISED)
+Plotly Dash or Streamlit. Core views:
+- Map: tract coloring by tier/score, filter by neighborhood/tier/indicator
+- Need vs Access Deficit decomposition: for any tract, show which side drives the equity score
+  (high need + low access deficit vs low need + high access deficit → different interventions needed)
+- Click-to-inspect tract profiles with demographic summary, GTFS service summary, trend direction
 
-## 4.3 — Integrate Simulation
-Connect Sprint 3 simulator to dashboard UI. User adjusts service parameters via controls → ML model re-predicts → map and scores update in real time. Before/after side-by-side.
+## 4.3 — Integrate Simulation (REVISED)
+Connect Sprint 3 simulator to dashboard UI:
+- User adjusts transit parameters (access side) and/or demographic scenarios (need side)
+- Access Deficit model re-predicts per tract; Need recomputed from scenario
+- Combined: updated_need × updated_access_deficit = new equity score
+- Map and scores update in real time, before/after side-by-side
+- Show decomposed deltas: "access deficit changed by X, need changed by Y, equity changed by Z"
+- Highlights where transit improvements have the most equity impact (where need is also high)
 
-## 4.4 — Alerts and Recommendations
-Surface at-risk tracts (from 2b.6), display feature importance as actionable recommendations, export capability.
+## 4.4 — Alerts and Recommendations (REVISED)
+- Surface fragile tracts from 2b.6 risk scoring (both need-worsening and access-worsening)
+- Display Access Deficit model feature importance as actionable recommendations
+  ("lowering headway has 3× more impact than adding stops in this tract")
+- Trend projections: show which tracts are projected to worsen over 2-3 years (TimeSeries)
+- Intervention prioritization: rank tracts by "equity improvement per dollar" using both models
+- Export capability: filtered tract lists, simulation results, trend reports
+Reference files: all Sprint 2b and 3 outputs

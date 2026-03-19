@@ -64,3 +64,29 @@
 ### Lesson 13: Validate output data distributions, not just shapes
 **Mistake:** Notebook ran without errors, output shape looked right (507 tracts × 80 columns), but 4 critical data quality bugs existed. Only found them because Luna uploaded the CSV for review.
 **Rule:** After generating any output dataset, check distributions (min/max/median/std) of key columns — especially computed features. A trend slope of 199 million or a ratio of 2.7 should be impossible. Add automated sanity checks that flag values outside expected ranges.
+
+### Lesson 15: Always read a file fresh from disk before editing it during a collaborative session
+**Context:** Luna works on files (notebooks, docs) in VS Code at the same time as active conversations. Her edits — corrections, added notes, restructured cells — are the authoritative version.
+**Rule:** Before touching any file that was previously modified in the session, always read it fresh from disk first. Never assume the file still matches what was last written. Build on top of what's there, not on a stale memory of it.
+
+### Lesson 16: Don't predict a formula you built from its own inputs
+**Mistake:** Trained regression and XGBoost to predict equity_priority_score using the same demographic
+and transit features that were used to compute it. The model achieved R² = 0.93 but was just
+reverse-engineering the formula — coefficients reflected our assigned weights, not data-driven discovery.
+**Fix:** Split into two models matching the equity formula's structure (Need × Access Deficit). Model
+only the Access Deficit side from transit features. Need side handled by TimeSeries projections.
+**Rule:** Before training any model, verify the target variable is independent of the predictor features.
+If the target was constructed from the predictors, the model is circular and its coefficients are meaningless.
+
+### Lesson 14: "Modeling-ready" means no known issues — not "pass the basic checks"
+**Mistake:** Declared the dataset modeling-ready after fixing 4 bugs, but left in: r=1.0 duplicate features (wheelchair/bike), zero-variance columns (transit_desert), 5 headway bands all at r>0.96, median-fill artifact (headsigns=5 for tracts with 0 stops), and weak interaction terms. These are all things any data scientist would flag in a review.
+**Rule:** Before declaring any output "ready," run the full audit: zero-variance, r>0.99 pairs, fill logic for missing data, signal strength of every engineered feature. If you'd be embarrassed showing it to a senior reviewer, it's not ready.
+
+### Lesson 15: Don't predict a formula you built from its own inputs
+**Mistake:** Trained regression and XGBoost to predict equity_priority_score using the same demographic
+and transit features that were used to compute it. The model achieved R² = 0.93 but was just
+reverse-engineering the formula — coefficients reflected our assigned weights, not data-driven discovery.
+**Fix:** Split into two models matching the equity formula's structure (Need × Access Deficit). Model
+only the Access Deficit side from transit features. Need side handled by TimeSeries projections.
+**Rule:** Before training any model, verify the target variable is independent of the predictor features.
+If the target was constructed from the predictors, the model is circular and its coefficients are meaningless.
