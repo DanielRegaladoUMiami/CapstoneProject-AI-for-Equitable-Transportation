@@ -1,1 +1,35 @@
+# Sprint 2b — Baseline Modeling
 
+## V3: Leakage-Free Service Deficit Model
+
+### Problem
+The original model (V2) achieved R²=0.85 but had data leakage: `transit_jobs_30_mean` appeared in 4 out of 5 target sub-indicators AND was used as a predictor feature. The model was predicting a number that already contained one of its inputs.
+
+### Fix
+Rebuilt 3 of 5 sub-indicators in the Service Deficit Index, replacing `transit_jobs_30_mean` with structural variables (stop counts, trip volumes, service hours, wheelchair access). Zero feature/target overlap verified programmatically.
+
+### Results
+
+| Metric | Value |
+|--------|-------|
+| Model | XGBoost (GridSearchCV-tuned) |
+| CV R² | 0.823 ± 0.033 (5-fold StratifiedKFold) |
+| Test R² | 0.789 |
+| RMSE | 0.056 |
+| MAE | 0.045 |
+
+### Top Features (SHAP)
+1. `freq_peak_am_tph` — 40% (AM peak frequency)
+2. `weekend_weekday_ratio` — 22% (weekend vs weekday service)
+3. `freq_early_tph` — 7% (early morning frequency)
+
+### Files
+- `Sprint2b_V3_LeakageFree_Modeling.ipynb` — final notebook (run this)
+- `Sprint2b_Modeling_Features_NotebookOutput.csv` — 507 tracts × 65 features
+- `Sprint2b_Tract_Risk_Scores.csv` — per-tract risk scores
+- `Sprint2b_Regression_Modeling.ipynb` — earlier V2 model (deprecated)
+
+### Architecture
+- **Features (13):** headway, frequency, weekend ratio, rail share, spatial neighbors, commute trends
+- **Target inputs (8):** stop count, route count, weekday trips, service span, headsigns, wheelchair %, daily trips, time tax
+- **Overlap:** ZERO

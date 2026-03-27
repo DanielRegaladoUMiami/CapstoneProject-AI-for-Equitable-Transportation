@@ -41,6 +41,22 @@ Design and validate interpretable baseline predictive models that identify curre
 
 | # | Deliverable | Status |
 |---|---|---|
-| 1 | Baseline predictive model outputs with documented performance metrics | ⬜ |
-| 2 | Ranked geographic zones for transit intervention with supporting rationale | ⬜ |
-| 3 | Interpretable insights linking model results to equity-focused decision-making | ⬜ |
+| 1 | Baseline predictive model outputs with documented performance metrics | ✅ |
+| 2 | Ranked geographic zones for transit intervention with supporting rationale | ✅ |
+| 3 | Interpretable insights linking model results to equity-focused decision-making | ✅ |
+
+## Sprint 2b Results (V3 — Leakage-Free)
+
+**Data leakage identified and fixed:** `transit_jobs_30_mean` was present in 4/5 target sub-indicators AND used as a predictor feature. Three sub-indicators were rebuilt with zero feature/target overlap.
+
+| Metric | Value |
+|--------|-------|
+| Model | XGBoost (GridSearchCV, 5-fold StratifiedKFold) |
+| CV R² | 0.823 ± 0.033 |
+| Test R² | 0.789 |
+| RMSE | 0.056 |
+| Top feature | freq_peak_am_tph (40% SHAP importance) |
+
+**Key notebooks:**
+- `Sprint 2a/Sprint2a_Composite_Equity_Indicators_v3.ipynb` — equity indicator framework
+- `Sprint 2b/Sprint2b_V3_LeakageFree_Modeling.ipynb` — final V3 model with SHAP + what-if scenarios
