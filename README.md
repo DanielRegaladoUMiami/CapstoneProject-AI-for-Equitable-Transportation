@@ -2,7 +2,7 @@
 
 > Predicting transit access gaps and equity issues across Miami-Dade County using AI-driven demand forecasting, graph network modeling, scenario simulation, and interactive visualization.
 
-[![Status](https://img.shields.io/badge/Status-Sprint%201-orange)]()
+[![Status](https://img.shields.io/badge/Status-Sprint%202b-blue)]()
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
 
@@ -124,7 +124,25 @@ Sprint 5 ▸ Final Presentation           May 1             ░░░░░░�
 Data profiling, quality assessment, geographic join strategy, and exploratory visualizations to understand transit coverage vs. population density and identify access disparities.
 
 ### Sprint 2 — Predictive Modeling
-Regression and time series models to estimate transit demand, predict accessibility outcomes, and rank geographic zones for intervention. Focus on interpretability — feature importance and coefficient analysis to identify top drivers of inequity.
+
+**Sprint 2a** — Built a composite equity indicator framework with 7 sub-indicators from GTFS, Census (ACS), and ArcGIS isochrone data across 507 census tracts.
+
+**Sprint 2b** — Trained a regression model to predict a Service Deficit Index from transit scheduling features. Key results:
+
+| | |
+|---|---|
+| **Model** | XGBoost (GridSearchCV-tuned, 5-fold StratifiedKFold CV) |
+| **CV R²** | 0.823 ± 0.033 |
+| **Test R²** | 0.789 |
+| **RMSE** | 0.056 |
+| **Features** | 13 (headway, frequency, weekend ratio, rail share, spatial, commute trends) |
+| **Target** | Service Deficit Index — composite of 5 sub-indicators (temporal mismatch, service structure, time tax, coverage, multimodal breadth) |
+
+Data leakage was identified and fixed: `transit_jobs_30_mean` appeared in 4/5 target sub-indicators AND as a predictor feature. Three sub-indicators were rebuilt using structural variables with zero feature/target overlap (verified programmatically). R² dropped from 0.85 (fake) to 0.82 (real).
+
+Top predictors (SHAP): `freq_peak_am_tph` (40%), `weekend_weekday_ratio` (22%), `freq_early_tph` (7%).
+
+Notebook: [`Sprint 2/Sprint 2b/Sprint2b_V3_LeakageFree_Modeling.ipynb`](Sprint%202/Sprint%202b/Sprint2b_V3_LeakageFree_Modeling.ipynb)
 
 ### Sprint 3 — Graph Network Modeling & Simulation
 Model the transit system as a graph (stops = nodes, routes = edges). Compute network accessibility metrics (reachability, centrality, travel-time paths). Apply Graph Neural Networks (GNNs) to capture non-linear patterns in accessibility propagation. Simulate service changes on the graph and quantify impact vs. baseline.
