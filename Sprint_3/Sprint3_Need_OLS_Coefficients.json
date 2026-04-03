@@ -1,0 +1,13 @@
+{
+  "coef_poverty_rate": 0.005992,
+  "coef_no_vehicle": 0.001369,
+  "intercept": 0.081886,
+  "r_squared": 0.817,
+  "n_tracts": 504,
+  "target": "composite_need",
+  "predictors": [
+    "poverty_rate_pct",
+    "hh_no_vehicle_pct"
+  ],
+  "source": "OLS regression on Sprint2b_Modeling_Features_NotebookOutput.csv (504 tracts)"
+}

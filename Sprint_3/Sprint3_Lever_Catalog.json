@@ -1,0 +1,150 @@
+{
+  "description": "Sprint 3 Lever Catalog \u2014 8 adjustable features for the simulation engine",
+  "model_features": 13,
+  "total_tracts": 504,
+  "levers": [
+    {
+      "feature": "freq_peak_am_tph",
+      "side": "access",
+      "unit": "trips/hr",
+      "delta_range": [
+        -10,
+        10
+      ],
+      "data_range": [
+        0.0,
+        227.67
+      ],
+      "data_mean": 26.69,
+      "shap_rank": 1,
+      "shap_importance": "39.6%",
+      "notes": "Peak AM frequency. #1 driver of deficit. Higher frequency \u2192 lower deficit."
+    },
+    {
+      "feature": "weekend_weekday_ratio",
+      "side": "access",
+      "unit": "ratio",
+      "delta_range": [
+        -0.5,
+        0.5
+      ],
+      "data_range": [
+        0.0,
+        1.3
+      ],
+      "data_mean": 0.43,
+      "shap_rank": 2,
+      "shap_importance": "21.7%",
+      "notes": "Weekend service parity. Most tracts at ~0.43. Set absolute target (e.g., 0.85)."
+    },
+    {
+      "feature": "freq_early_tph",
+      "side": "access",
+      "unit": "trips/hr",
+      "delta_range": [
+        -5,
+        5
+      ],
+      "data_range": [
+        0.0,
+        27.5
+      ],
+      "data_mean": 2.98,
+      "shap_rank": 3,
+      "shap_importance": "6.9%",
+      "notes": "Early morning frequency. Low baseline (mean ~3 tph). Paired with headway_early."
+    },
+    {
+      "feature": "headway_peak_am_min",
+      "side": "access",
+      "unit": "minutes",
+      "delta_range": [
+        -20,
+        20
+      ],
+      "data_range": [
+        3.53,
+        120.0
+      ],
+      "data_mean": 58.62,
+      "shap_rank": 6,
+      "shap_importance": "3.8%",
+      "notes": "Peak headway. Inversely related to frequency. Lower \u2192 better service."
+    },
+    {
+      "feature": "headway_early_min",
+      "side": "access",
+      "unit": "minutes",
+      "delta_range": [
+        -20,
+        20
+      ],
+      "data_range": [
+        1.89,
+        120.0
+      ],
+      "data_mean": 70.81,
+      "shap_rank": null,
+      "shap_importance": "Paired with freq_early_tph",
+      "notes": "Early morning headway. Paired with early frequency lever."
+    },
+    {
+      "feature": "rail_trip_share",
+      "side": "access",
+      "unit": "fraction",
+      "delta_range": [
+        -0.1,
+        0.3
+      ],
+      "data_range": [
+        0.0,
+        0.79
+      ],
+      "data_mean": 0.011,
+      "shap_rank": null,
+      "shap_importance": "Modal lever",
+      "notes": "Rail mode share. Very low baseline (1.1%). Increase = modal shift to rail."
+    },
+    {
+      "feature": "poverty_rate_pct",
+      "side": "need",
+      "unit": "delta percentage points",
+      "delta_range": [
+        -15,
+        15
+      ],
+      "data_range": [
+        0.5,
+        100.0
+      ],
+      "data_mean": 15.21,
+      "ols_coefficient": 0.005992,
+      "notes": "Poverty rate. Need-side lever. OLS coef = 0.006 per percentage point."
+    },
+    {
+      "feature": "hh_no_vehicle_pct",
+      "side": "need",
+      "unit": "delta percentage points",
+      "delta_range": [
+        -20,
+        20
+      ],
+      "data_range": [
+        0.0,
+        100.0
+      ],
+      "data_mean": 10.09,
+      "ols_coefficient": 0.001369,
+      "notes": "No-vehicle households. Need-side lever. OLS coef = 0.001 per percentage point."
+    }
+  ],
+  "non_adjustable": [
+    "neighbor_mean_equity_score",
+    "neighbor_mean_headway_peak",
+    "n_neighbors",
+    "trend_commute_public_transit_pct",
+    "trend_commute_drove_alone_pct",
+    "trend_commute_wfh_pct",
+    "trend_mean_commute_time_min"
+  ]
+}
