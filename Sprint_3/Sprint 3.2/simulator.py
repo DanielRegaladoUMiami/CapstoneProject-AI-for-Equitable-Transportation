@@ -143,12 +143,14 @@ class Simulator:
         lever_catalog_path: Optional[str] = None,
     ):
         # Resolve default paths relative to this file's directory
-        here = Path(__file__).resolve().parent
-        sprint2 = here.parent / "Sprint 2 "
+        here = Path(__file__).resolve().parent              # Sprint 3/Sprint 3.2/
+        sprint3 = here.parent                               # Sprint 3/
+        sprint3_1 = sprint3 / "Sprint 3.1"                  # Sprint 3/Sprint 3.1/
+        sprint2 = sprint3.parent / "Sprint 2 "              # Sprint 2 /
 
-        self._baseline_path = Path(baseline_path) if baseline_path else here / "Sprint3_Baseline_State.csv"
+        self._baseline_path = Path(baseline_path) if baseline_path else sprint3_1 / "Sprint3_Baseline_State.csv"
         self._model_path = Path(model_path) if model_path else sprint2 / "Sprint2b_XGBoost_v3.pkl"
-        self._lever_path = Path(lever_catalog_path) if lever_catalog_path else here / "Sprint3_Lever_Catalog.json"
+        self._lever_path = Path(lever_catalog_path) if lever_catalog_path else sprint3_1 / "Sprint3_Lever_Catalog.json"
 
         # Load assets
         self._baseline = pd.read_csv(self._baseline_path)
