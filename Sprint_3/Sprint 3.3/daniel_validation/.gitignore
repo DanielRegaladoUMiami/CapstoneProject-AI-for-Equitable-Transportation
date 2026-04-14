@@ -1,0 +1,17 @@
+# Large GTFS files — extracted on demand from gtfs.zip by
+# build_city2graph_diagnostics.py. gtfs.zip is committed as the source.
+gtfs/agency.txt
+gtfs/calendar.txt
+gtfs/calendar_dates.txt
+gtfs/routes.txt
+gtfs/shapes.txt
+gtfs/stop_times.txt
+gtfs/stops.txt
+gtfs/trips.txt
+
+# Temp files sometimes generated when testing the Gradio notebook locally
+Sprint3_Baseline_State.csv
+Sprint2b_XGBoost_v3.pkl
+Sprint2b_Scaler_v3.pkl
+Sprint3_Lever_Catalog.json
+__pycache__/

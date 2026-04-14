@@ -10,9 +10,16 @@ bug-fixes for Lina's Gradio V3. Built after reviewing Luna's Sprint 3 Plan v3
 |---|---|
 | `Sprint3_Scenario_Validation.ipynb` | Primary Deloitte deliverable per plan §3.3. Runs S1–S5 through Luna's simulator, tier-shift matrices, direction tests, pass-criteria checks. |
 | `Sprint3_Scenario_Results.csv` | 504 × 23. Replaces Lina's CSV with per-scenario scopes respected per plan. |
-| `Sprint_3_Gradio_V3_fixed.ipynb` | Lina's Gradio V3 with 4 bugs patched so it actually talks to Luna's simulator. |
+| `Sprint_3_Gradio_V3_fixed.ipynb` | Lina's Gradio V3 with 4 bugs patched + route-level diagnostic injected into the per-tract narrative. |
 | `simulator.py` | Fork of Luna's Sprint 3.2 simulator **only** to fix the default-path bug. Original in `Sprint 3.2/` left untouched. |
 | `build_validation_notebook.py` | Generator for `Sprint3_Scenario_Validation.ipynb` (regen if scenarios change). |
+| `build_city2graph_diagnostics.py` | GTFS → per-tract route-level diagnostics pipeline (see below). |
+| `City2Graph_Tract_Routes.csv` | 2,758 (tract, route) pairs with stops, headway, trip count. |
+| `City2Graph_Tract_Summary.csv` | 684 tracts with aggregate service metrics + top routes. |
+| `City2Graph_Problem_Routes.csv` | 93 routes ranked by impact on Critical+High tracts. |
+| `City2Graph_Tract_Narratives.json` | 496 pre-built per-tract explainer strings. |
+| `gtfs/gtfs.zip` | Miami-Dade GTFS feed (2026-03-24). Unzipped on demand by the pipeline. |
+| `miami_dade_tracts.geojson` | Cached TIGERweb tract geometries (707 tracts). |
 
 ## What I did NOT modify
 
@@ -67,6 +74,39 @@ Options for team:
 Also worth flagging: **S2 worsens 57 tracts** — the 76 tracts with `weekend_ratio`
 above 0.80 get equalized down, hurting them. Team should decide if S2 is
 "improve-only" or "equalize".
+
+## City2Graph diagnostics (Sprint 3 "Parallel Track" per plan)
+
+The plan describes City2Graph as a non-blocking exploration track. This
+implementation is lean and purpose-built: it takes a tract flagged by the
+simulator as Critical and surfaces **which specific bus routes are the bottleneck**,
+with headways and stop counts.
+
+**Pipeline:**
+1. Load Miami-Dade GTFS (123 routes, 6,954 stops, 972K stop-events).
+2. Filter to weekday service (Mon-Fri service_ids) + AM peak window (06:00-09:00).
+3. Per (route, stop): count arrivals → derive headway (3h window / n_trips, cap 120 min).
+4. Spatial join stops → tracts with a 500m walking buffer (EPSG:2236, Florida East).
+5. Per tract: aggregate route list + stops + best/worst headway.
+6. Rank problem routes: `n_critical_high_tracts × worst_headway_min`.
+
+**Top 5 problem routes in Miami-Dade (Critical+High scope):**
+
+| Route | Long name | #Crit/High tracts | Worst headway (min) |
+|---|---|---|---|
+| 17 | 163 ST TERM-VIZ VIA 17 AV | 28 | 60 |
+| 54 | HIALEAH-MIAMI LAKES-BISCA VIA 54 ST | 27 | 60 |
+| HIAFLA | City of Hialeah Transit (Flamingo) | 19 | 60 |
+| 95 | I-95 GOLDEN GLADES EXPRESS | 9 | 120 |
+| MIALIB | City of Miami - Liberty City Route | 14 | 60 |
+
+**Narrative example (tract 12086000220, Critical, served by 8 routes):**
+
+> *Route NOMORG (City of North Miami Orange) has 90min headway. Lever candidate: increase freq_peak_am_tph on this route.*
+
+In the fixed Gradio, clicking any tract now shows the full per-route table
+plus the bottleneck flag — closing the loop between "this tract is Critical"
+and "here's the specific service gap to fix".
 
 ## How to run
 
