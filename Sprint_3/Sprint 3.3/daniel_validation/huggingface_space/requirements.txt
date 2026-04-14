@@ -1,0 +1,10 @@
+gradio>=4.44,<5
+pandas>=2.0
+numpy>=1.26
+geopandas>=1.0
+shapely>=2.0
+plotly>=5.22
+joblib>=1.4
+xgboost>=2.0
+scikit-learn>=1.4
+requests>=2.31
