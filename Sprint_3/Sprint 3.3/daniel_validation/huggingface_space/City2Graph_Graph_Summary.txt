@@ -1,0 +1,8 @@
+city2graph graph summary (weekday AM 06:00:00-09:00:00)
+  nodes (stops):   6,954
+  edges (service): 7,785
+  connected?       False
+  stops with coords: 6,954
+  tracts with network coverage: 496/504
+  avg travel-min to downtown: 64.7 min
+  stops unreachable from downtown: 182
