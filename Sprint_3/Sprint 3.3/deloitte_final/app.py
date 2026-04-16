@@ -59,15 +59,17 @@ INK = "#1A1A1A"
 MUTED = "#495057"
 
 TIER_COLORS = {
-    "Critical": "#C0392B",  # vivid red — the eye should go here first
-    "High":     "#F39C12",  # vivid orange
-    "Moderate": "#D5DBDB",  # visible cool grey so county shape reads clearly
-    "Low":      "#ECF0F1",  # lighter grey background
+    "Critical": "#C0392B",  # vivid red
+    "High":     "#E67E22",  # vivid orange
+    "Moderate": "#F1C40F",  # amber
+    "Low":      "#2ECC71",  # green
 }
 
-# Urban Miami-Dade bounding box (tight crop on inhabited area).
-URBAN_LON = [-80.48, -80.10]
-URBAN_LAT = [25.38, 25.95]
+# Urban Miami-Dade bounding box (tight crop on densely populated corridor,
+# excluding giant unincorporated western tracts that are Moderate-tier by
+# score but cover huge rural area and visually swamp the frame).
+URBAN_LON = [-80.40, -80.10]
+URBAN_LAT = [25.43, 25.95]
 TIER_ORDER = ["Low", "Moderate", "High", "Critical"]
 
 # ---------------------------------------------------------------------------
@@ -236,43 +238,34 @@ def _choropleth(gdf_src, color_col, color_label, title="", color_range=None, sca
     return fig
 
 
+import plotly.io as _pio
+
+
+def fig_to_iframe(fig, height=580):
+    """Convert a Plotly figure to an iframe-embedded HTML string.
+    Gradio's gr.HTML strips <script> tags, so we use iframe srcdoc
+    which preserves the Plotly JS execution context."""
+    html = _pio.to_html(fig, full_html=True, include_plotlyjs="cdn",
+                         config={"displayModeBar": False})
+    escaped = html.replace('"', '&quot;')
+    return (f'<iframe srcdoc="{escaped}" '
+            f'style="width:100%;height:{height}px;border:0;"></iframe>')
+
+
 def overview_map():
-    """
-    Tier-discrete SVG choropleth cropped to urban Miami-Dade.
-    Critical + High tracts are drawn as an overlay trace with bolder dark
-    outlines so they visibly pop above the neutral context.
-    """
-    gdf_src = gdf.copy()
-    fig = px.choropleth(
-        gdf_src, geojson=gdf_geojson, locations="GEOID",
+    """Mapbox choropleth with carto-positron basemap, rendered via iframe."""
+    fig = px.choropleth_mapbox(
+        gdf, geojson=gdf_geojson, locations="GEOID",
         featureidkey="properties.GEOID",
         color="equity_tier",
         color_discrete_map=TIER_COLORS,
         category_orders={"equity_tier": ["Critical", "High", "Moderate", "Low"]},
+        mapbox_style="carto-positron",
+        zoom=9, center={"lat": 25.77, "lon": -80.25},
+        opacity=0.75,
         hover_data={"equity_priority_score": ":.3f", "equity_tier": True},
     )
-    fig.update_geos(
-        visible=False, showframe=False,
-        projection_type="mercator", bgcolor="#FFFFFF",
-        lonaxis=dict(range=URBAN_LON),
-        lataxis=dict(range=URBAN_LAT),
-    )
-    fig.update_traces(marker_line_width=0.3, marker_line_color="#FFFFFF")
-
-    # Overlay Critical + High with bold dark outlines so they pop
-    hi_gdf = gdf_src[gdf_src["equity_tier"].isin(["Critical", "High"])].copy()
-    hi_geojson_obj = json.loads(hi_gdf.to_json())
-    fig.add_trace(go.Choropleth(
-        geojson=hi_geojson_obj,
-        locations=hi_gdf["GEOID"],
-        z=hi_gdf["equity_tier"].map({"Critical": 1.0, "High": 0.5}),
-        featureidkey="properties.GEOID",
-        colorscale=[[0, TIER_COLORS["High"]], [1, TIER_COLORS["Critical"]]],
-        showscale=False,
-        marker_line_width=2.2,
-        marker_line_color="#1D1D1F",
-        hoverinfo="skip",
-    ))
+    fig.update_traces(marker_line_width=0.5, marker_line_color="#FFFFFF")
     fig.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         height=580, paper_bgcolor="#FFFFFF", plot_bgcolor="#FFFFFF",
@@ -302,15 +295,14 @@ def before_after_maps(tract_df):
     m["tier_after"] = m["tier_after"].fillna(m["equity_tier"])
 
     def tier_choropleth(col, title):
-        fig = px.choropleth(
+        fig = px.choropleth_mapbox(
             m, geojson=gdf_geojson, locations="GEOID",
             featureidkey="properties.GEOID", color=col,
             color_discrete_map=TIER_COLORS,
             category_orders={col: ["Critical", "High", "Moderate", "Low"]},
-        )
-        fig.update_geos(
-            fitbounds="locations", visible=False, showframe=False,
-            projection_type="mercator", bgcolor="#FFFFFF",
+            mapbox_style="carto-positron",
+            zoom=9, center={"lat": 25.77, "lon": -80.25},
+            opacity=0.75,
         )
         fig.update_traces(marker_line_width=0.4, marker_line_color="#FFFFFF")
         fig.update_layout(
@@ -328,7 +320,7 @@ def before_after_maps(tract_df):
                 bordercolor="#D2D2D7", borderwidth=1,
             ),
         )
-        return fig
+        return fig_to_iframe(fig, 420)
 
     return tier_choropleth("tier_before", "Before"), tier_choropleth("tier_after", "After")
 
@@ -805,22 +797,19 @@ def network_map():
                   on="GEOID", how="left")
     m["min_travel_min_to_downtown"] = m["min_travel_min_to_downtown"].fillna(90)
     vmax = m["min_travel_min_to_downtown"].quantile(0.95)
-    fig = px.choropleth(
+    fig = px.choropleth_mapbox(
         m, geojson=gdf_geojson, locations="GEOID",
         featureidkey="properties.GEOID",
         color="min_travel_min_to_downtown",
         color_continuous_scale=[[0, "#F5F5F7"], [0.4, "#FFE0B2"],
                                 [0.7, "#FF8C42"], [1, "#D93025"]],
         range_color=(10, vmax),
+        mapbox_style="carto-positron",
+        zoom=9, center={"lat": 25.77, "lon": -80.25},
+        opacity=0.80,
         labels={"min_travel_min_to_downtown": "Min to downtown"},
     )
-    fig.update_geos(
-        visible=False, showframe=False,
-        projection_type="mercator", bgcolor="#FFFFFF",
-        lonaxis=dict(range=URBAN_LON),
-        lataxis=dict(range=URBAN_LAT),
-    )
-    fig.update_traces(marker_line_width=0.5, marker_line_color="#FFFFFF")
+    fig.update_traces(marker_line_width=0.4, marker_line_color="#FFFFFF")
     fig.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         height=560, paper_bgcolor="#FFFFFF",
@@ -1339,7 +1328,20 @@ with gr.Blocks(title="Miami-Dade Transit Equity Simulator", theme=THEME, css=CUS
   highest dependency — these are the places a policy dollar buys the most
   equity.</div>
 </div>''')
-            gr.Plot(value=overview_map(), show_label=False, container=False)
+            # Wrap Plotly in an iframe srcdoc — Gradio's gr.HTML strips
+            # <script> tags, which killed the inline Plotly.newPlot() call.
+            # Iframe content is not sanitised.
+            import plotly.io as _pio
+            _overview_full_html = _pio.to_html(
+                overview_map(), full_html=True,
+                include_plotlyjs="cdn",
+                config={"displayModeBar": False},
+            )
+            _overview_escaped = _overview_full_html.replace('"', '&quot;')
+            gr.HTML(
+                f'<iframe srcdoc="{_overview_escaped}" '
+                f'style="width:100%; height:620px; border:0;"></iframe>'
+            )
             with gr.Row():
                 gr.Markdown(f'''
 ### Tier distribution
@@ -1417,8 +1419,8 @@ the specific bus routes serving it.
             gr.Markdown("---")
             scenario_summary = gr.HTML(value='<em>Pick a preset above, or open Advanced for custom sliders.</em>')
             with gr.Row():
-                map_before = gr.Plot(label="Before", container=False)
-                map_after = gr.Plot(label="After", container=False)
+                map_before = gr.HTML(value="")
+                map_after = gr.HTML(value="")
             with gr.Row():
                 tier_bars = gr.Plot(label="Tier distribution", container=False)
                 tier_shift_out = gr.HTML(value="")
@@ -1466,7 +1468,7 @@ the specific bus routes serving it.
         with gr.Tab("Network Analysis"):
             gr.HTML(network_summary_html())
             gr.Markdown("### Travel-time to downtown from each tract (NetworkX shortest path)")
-            gr.Plot(value=network_map(), show_label=False, container=False)
+            gr.HTML(fig_to_iframe(network_map(), 560))
             gr.Markdown("### 20 tracts with longest travel time to downtown")
             gr.Dataframe(value=network_table(), interactive=False, wrap=True)
 
