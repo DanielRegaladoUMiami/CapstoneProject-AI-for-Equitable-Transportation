@@ -154,7 +154,10 @@ def run_scenario(deltas=None, targets=None, tract_filter="all", label=""):
     features["headway_early_min"] = features["headway_early_min"].clip(0.0, HEADWAY_CAP)
     deficit = sim._model.predict(features)
     equity, tier = sim._compute_equity(deficit)
-    tier_base = sim._assign_tiers(sim._equity_base)
+    # Use the baseline's stored equity_tier so tier_before row totals match
+    # the published KPIs (boundary tracts would otherwise flip under the
+    # >= lo / < hi cutoff logic — see simulator._assign_tiers).
+    tier_base = sim._baseline["equity_tier"].values
     result = sim._build_result(deficit, equity, tier_base, tier, label)
     # Attach scenario features for extended metrics
     result._scenario_features = features
@@ -271,7 +274,7 @@ def overview_map():
         height=580, paper_bgcolor="#FFFFFF", plot_bgcolor="#FFFFFF",
         font=dict(family="-apple-system, SF Pro Text, sans-serif", color="#1D1D1F", size=12),
         legend=dict(
-            title=dict(text="Equity tier", font=dict(color="#1D1D1F", size=12)),
+            title=dict(text="Priority tier", font=dict(color="#1D1D1F", size=12)),
             font=dict(color="#1D1D1F", size=12),
             orientation="h", yanchor="top", y=-0.02, xanchor="left", x=0,
             bgcolor="rgba(255,255,255,0.85)", bordercolor="#D2D2D7", borderwidth=1,
@@ -312,7 +315,7 @@ def before_after_maps(tract_df):
                        family="-apple-system, SF Pro Display, sans-serif"), x=0.02),
             font=dict(family="-apple-system, SF Pro Text, sans-serif", color="#1D1D1F", size=11),
             legend=dict(
-                title=dict(text="Tier", font=dict(color="#1D1D1F", size=11)),
+                title=dict(text="Priority tier", font=dict(color="#1D1D1F", size=11)),
                 font=dict(color="#1D1D1F", size=10),
                 orientation="h", yanchor="top", y=-0.02,
                 xanchor="left", x=0,
@@ -415,7 +418,7 @@ def format_scenario_output(result, name, description, scope_label):
   </div>
   <div class="kpi-card">
     <div class="label">Avg wait saved</div>
-    <div class="value">{ext["avg_wait_saved_min"]:+.1f}<span style="font-size:24px;margin-left:4px">min</span></div>
+    <div class="value">{ext["avg_wait_saved_min"]:.1f}<span style="font-size:24px;margin-left:4px">min</span></div>
     <div class="detail">per trip, peak AM</div>
   </div>
   <div class="kpi-card">
@@ -436,11 +439,87 @@ def format_scenario_output(result, name, description, scope_label):
 # ---------------------------------------------------------------------------
 print("Pre-computing preset scenarios...")
 PRESET_CACHE = {}
+PRESET_RESULTS = {}
 for key, p in PRESETS.items():
     r = run_scenario(deltas=p["deltas"], targets=p["targets"],
                      tract_filter=p["scope"], label=p["label"])
     PRESET_CACHE[key] = format_scenario_output(r, p["label"], p["desc"], p["scope_label"])
+    PRESET_RESULTS[key] = r
     print(f"  {key}: {p['label']} cached")
+
+
+def scenario_metrics(key):
+    r = PRESET_RESULTS[key]
+    s = r.summary
+    tdf = r.tract_df
+    ext = extended_summary(r, sim._features_base,
+                           getattr(r, "_scenario_features", sim._features_base))
+    before_counts = tdf["tier_before"].value_counts().to_dict()
+    after_counts = tdf["tier_after"].value_counts().to_dict()
+    return {
+        "critical_before": int(before_counts.get("Critical", 0)),
+        "critical_after": int(after_counts.get("Critical", 0)),
+        "critical_out": int(before_counts.get("Critical", 0) - after_counts.get("Critical", 0)),
+        "tier_upgrades": s["n_tier_upgrades"],
+        "tracts_improved": s["n_improved"],
+        "avg_wait_saved": ext["avg_wait_saved_min"],
+        "max_wait_saved": ext["max_wait_saved_min"],
+        "avg_ridership_pct": ext["avg_ridership_pct"],
+        "n_tracts_ridership_up": ext["n_tracts_ridership_up"],
+    }
+
+
+def comparison_html(key_a, key_b):
+    if key_a == key_b:
+        return '<div class="impact-callout"><div class="headline">Pick two different scenarios to compare</div></div>'
+    pa, pb = PRESETS[key_a], PRESETS[key_b]
+    ma, mb = scenario_metrics(key_a), scenario_metrics(key_b)
+
+    def delta_cell(a, b, higher_better=True, fmt="{:+.1f}", suffix=""):
+        d = b - a
+        if abs(d) < 0.05:
+            return f'<span style="color:{MUTED}">~ 0{suffix}</span>'
+        good = (d > 0) if higher_better else (d < 0)
+        color = "#1E8449" if good else "#B03A2E"
+        return f'<span style="color:{color};font-weight:600">{fmt.format(d)}{suffix}</span>'
+
+    rows = [
+        ("Tracts moved out of Critical", ma["critical_out"], mb["critical_out"], True, "{:d}", "{:+d}", ""),
+        ("Tier upgrades (any tier)",     ma["tier_upgrades"], mb["tier_upgrades"], True, "{:d}", "{:+d}", ""),
+        ("Tracts improved",              ma["tracts_improved"], mb["tracts_improved"], True, "{:d}", "{:+d}", ""),
+        ("Avg wait saved per trip",      ma["avg_wait_saved"], mb["avg_wait_saved"], True, "{:.1f}", "{:+.1f}", " min"),
+        ("Peak wait saved (best tract)", ma["max_wait_saved"], mb["max_wait_saved"], True, "{:.1f}", "{:+.1f}", " min"),
+        ("Avg ridership change",         ma["avg_ridership_pct"], mb["avg_ridership_pct"], True, "{:.1f}", "{:+.1f}", " %"),
+        ("Tracts with ridership up",     ma["n_tracts_ridership_up"], mb["n_tracts_ridership_up"], True, "{:d}", "{:+d}", ""),
+    ]
+
+    body = ''.join(
+        f'<tr><td>{label}</td>'
+        f'<td style="text-align:right">{val_fmt.format(a)}{suffix}</td>'
+        f'<td style="text-align:right">{val_fmt.format(b)}{suffix}</td>'
+        f'<td style="text-align:right">{delta_cell(a, b, hb, delta_fmt, suffix)}</td></tr>'
+        for label, a, b, hb, val_fmt, delta_fmt, suffix in rows
+    )
+
+    return f'''
+<div class="impact-callout">
+  <div class="headline">{pa["label"]}  vs.  {pb["label"]}</div>
+  <div><strong>A:</strong> {pa["desc"]} · Scope: {pa["scope_label"]}</div>
+  <div><strong>B:</strong> {pb["desc"]} · Scope: {pb["scope_label"]}</div>
+</div>
+<table class="data-table" style="margin-top:1rem">
+  <thead><tr>
+    <th>Metric</th>
+    <th style="text-align:right">A · {pa["label"]}</th>
+    <th style="text-align:right">B · {pb["label"]}</th>
+    <th style="text-align:right">B &minus; A</th>
+  </tr></thead>
+  <tbody>{body}</tbody>
+</table>
+<div style="color:{MUTED};font-size:12px;margin-top:0.5rem">
+  Delta color: green = B outperforms A on that metric; red = A wins.
+</div>
+'''
 
 
 def run_preset_cached(key):
@@ -1435,6 +1514,30 @@ the specific bus routes serving it.
                 inputs=[s_freq_peak, s_freq_early, s_weekend, s_rail, s_scope, s_custom],
                 outputs=out_list,
             )
+
+        # ── Scenario Comparison ─────────────────────────────────────────
+        with gr.Tab("Scenario Comparison"):
+            gr.HTML('''
+<div class="impact-callout">
+  <div class="headline">Compare two policies side by side</div>
+  <div>Pick two of the five reference scenarios. The table shows absolute
+  values for each, plus the delta (B minus A) colored by which policy wins
+  on that metric. Useful for tradeoff conversations: does rail modal shift
+  move more tracts out of Critical than peak-frequency boost?</div>
+</div>''')
+            preset_labels = {k: f"{k} · {PRESETS[k]['label']}" for k in PRESETS}
+            with gr.Row():
+                cmp_a = gr.Dropdown(
+                    choices=[(v, k) for k, v in preset_labels.items()],
+                    value="S1", label="Scenario A",
+                )
+                cmp_b = gr.Dropdown(
+                    choices=[(v, k) for k, v in preset_labels.items()],
+                    value="S4", label="Scenario B",
+                )
+            cmp_btn = gr.Button("Compare scenarios", elem_classes=["primary-cta"])
+            cmp_out = gr.HTML(value=comparison_html("S1", "S4"))
+            cmp_btn.click(fn=comparison_html, inputs=[cmp_a, cmp_b], outputs=cmp_out)
 
         # ── Recommendations ─────────────────────────────────────────────
         with gr.Tab("Recommendations"):
